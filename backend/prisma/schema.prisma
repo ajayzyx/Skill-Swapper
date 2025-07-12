@@ -1,0 +1,86 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String        @id @default(uuid())
+  name           String
+  email          String        @unique
+  password       String
+  location       String?
+  profilePhoto   String?       // Cloudinary or S3 URL
+  skillsOffered  String[]      // Array of offered skills
+  skillsWanted   String[]      // Array of wanted skills
+  availability   String[]      // e.g., ["weekends", "evenings"]
+  isPublic       Boolean       @default(true)
+  isAdmin        Boolean       @default(false)
+  banned         Boolean       @default(false)
+
+  createdSwaps   SwapRequest[] @relation("CreatedSwaps")
+  receivedSwaps  SwapRequest[] @relation("ReceivedSwaps")
+  givenFeedback  Feedback[]    @relation("GivenFeedback")
+  receivedFeedback Feedback[]  @relation("ReceivedFeedback")
+
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+model SwapRequest {
+  id             String    @id @default(uuid())
+  fromUser       User      @relation("CreatedSwaps", fields: [fromUserId], references: [id])
+  fromUserId     String
+
+  toUser         User      @relation("ReceivedSwaps", fields: [toUserId], references: [id])
+  toUserId       String
+
+  skillOffered   String
+  skillRequested String
+  message        String?
+  status         SwapStatus @default(PENDING)
+
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  feedback       Feedback?
+}
+
+model Feedback {
+  id             String    @id @default(uuid())
+  swap           SwapRequest @relation(fields: [swapId], references: [id])
+  swapId         String     @unique
+
+  fromUser       User      @relation("GivenFeedback", fields: [fromUserId], references: [id])
+  fromUserId     String
+
+  toUser         User      @relation("ReceivedFeedback", fields: [toUserId], references: [id])
+  toUserId       String
+
+  rating         Int       // 1–5
+  comment        String?
+
+  createdAt      DateTime  @default(now())
+}
+
+model AdminMessage {
+  id             String    @id @default(uuid())
+  content        String
+  sentAt         DateTime  @default(now())
+}
+enum SwapStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  DELETED
+}
+
