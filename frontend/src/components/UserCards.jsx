@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import SkillRequestModal from './SkillRequestModel';
 
-const UserCard = ({ user }) => {
+const UserCard = ({ user, onRequestSubmit }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     offeredSkill: '',
@@ -10,18 +10,18 @@ const UserCard = ({ user }) => {
   });
 
   const handleOpenModal = () => {
-    setFormData({
-      offeredSkill: '',
-      wantedSkill: '',
-      message: '',
-    });
+    setFormData({ offeredSkill: '', wantedSkill: '', message: '' });
     setIsModalOpen(true);
   };
 
   const handleSubmit = () => {
-    console.log('Submitted data:', formData);
+    if (!formData.offeredSkill || !formData.wantedSkill || !formData.message.trim()) {
+      alert('Please fill in all fields.');
+      return;
+    }
+
+    onRequestSubmit(formData);
     setIsModalOpen(false);
-    // You can send this data to your backend here
   };
 
   return (
@@ -29,28 +29,22 @@ const UserCard = ({ user }) => {
       <div className="border rounded-2xl p-4 shadow-md bg-gray-800 text-white flex items-center justify-between mb-4">
         <div className="flex items-center gap-4">
           <div className="w-32 h-32 bg-gray-700 rounded-full flex items-center justify-center text-sm">
-            Profile Photo
+            {user.name.charAt(0)}
           </div>
           <div>
             <h2 className="text-xl font-semibold">{user.name}</h2>
             <p className="text-green-400 text-sm mt-1">
               Skills Offered =&gt;{' '}
-              {user.skillsOffered.map((skill) => (
-                <span
-                  key={skill}
-                  className="inline-block bg-gray-800 px-2 py-1 rounded-md mr-1"
-                >
+              {user.skillsOffered.map(skill => (
+                <span key={skill} className="inline-block bg-gray-800 px-2 py-1 rounded-md mr-1">
                   {skill}
                 </span>
               ))}
             </p>
             <p className="text-blue-400 text-sm mt-1">
               Skills Wanted =&gt;{' '}
-              {user.skillsWanted.map((skill) => (
-                <span
-                  key={skill}
-                  className="inline-block bg-gray-800 px-2 py-1 rounded-md mr-1"
-                >
+              {user.skillsWanted.map(skill => (
+                <span key={skill} className="inline-block bg-gray-800 px-2 py-1 rounded-md mr-1">
                   {skill}
                 </span>
               ))}
@@ -68,7 +62,6 @@ const UserCard = ({ user }) => {
         </div>
       </div>
 
-      {/* Pass modal only when triggered */}
       <SkillRequestModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
